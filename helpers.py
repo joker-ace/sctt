@@ -1,12 +1,9 @@
 import sys
-import itertools
-
-from decimal import Decimal
+import time
+import threading
+import pprint
 
 from constants import MB
-from constants import SCALR_META
-from constants import COST
-from constants import OBJECT_TYPES
 
 
 def get_obj_size_in_mb(object):
@@ -14,34 +11,19 @@ def get_obj_size_in_mb(object):
 
 
 def print_obj_size(object):
-    print object
+    pprint.pprint(object)
     print '{0:.2f} MB\n'.format(get_obj_size_in_mb(object))
 
 
-def get_archived_file_object_from_zip_archive(zip_archive):
-    zipped_files = zip_archive.namelist()
-    if zipped_files:
-        csv_file_name = zipped_files[0]
-        return zip_archive.open(csv_file_name)
-    raise Exception('Exception: zip archive contain no files!')
+def timeit(f):
+    def inner(*args, **kwargs):
+        start_time = time.time()
+        result = f(*args, **kwargs)
+        end_time = time.time()
+        print '{} {}: {} sec.'.format(threading.current_thread().getName(), f.__name__, (end_time - start_time))
+        if f.__name__ in ('process_zip_file_by_url', 'download_zip_archive_to_memory'):
+            print args[0]
+            print
+        return result
 
-
-def is_valid_for_calculations_csv_row(row):
-    return row.get(SCALR_META) and Decimal(row.get(COST, '0'))
-
-def parse_object_ids_from_scalr_meta(string):
-    return string.split(':')[1:] # assume that every meta data string is valid
-
-def calculate_statistics(csv_reader):
-    statistics = {}
-    csv_reader.next()
-    for row in csv_reader:
-        if not is_valid_for_calculations_csv_row(row):
-            continue
-
-        objects_id = parse_object_ids_from_scalr_meta(row[SCALR_META])
-        for entity in itertools.izip(OBJECT_TYPES, objects_id):
-            if entity not in statistics:
-                statistics[entity] = Decimal('0')
-            statistics[entity] += Decimal(row[COST])
-    return statistics
+    return inner
