@@ -26,11 +26,8 @@ def process_zip_file_by_url(zip_file_url):
     archived_file_object = utils.get_archived_file_object_from_zip_archive(downloader.get_zip_archive())
     csv_reader = csv.reader(archived_file_object)
     stats = statistics.calculate_statistics(csv_reader)
-    utils.print_obj_size(stats)
-    db_lock.acquire()
-    db = database.Database()
-    db.save_statistics(stats)
-    db_lock.release()
+    utils.print_obj_size(stats, message='Thread statistics dict size: ')
+    return stats
 
 
 def main():
@@ -40,7 +37,13 @@ def main():
         pool.add_task(process_zip_file_by_url, url)
 
     pool.wait_completion()
+    stats_list = pool.results
 
+    stats = utils.merge_threads_statistics(stats_list)
+
+    db = database.Database()
+    db.save_statistics(stats)
+    del db
 
 if __name__ == '__main__':
     main()

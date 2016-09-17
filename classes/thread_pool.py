@@ -7,8 +7,9 @@ class ThreadPool(object):
     """Pool of threads consuming tasks from a queue"""
     def __init__(self, max_threads):
         self.tasks = Queue(max_threads)
+        self.results = []
         for _ in xrange(max_threads):
-            Worker(self.tasks)
+            Worker(self.tasks, self.results)
 
     def add_task(self, function, *args, **kargs):
         """Add a task to the queue"""

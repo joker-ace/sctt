@@ -13,10 +13,10 @@ def get_obj_size_in_mb(object):
     return sys.getsizeof(object) / MB
 
 
-def print_obj_size(object, print_obj=False):
+def print_obj_size(object, print_obj=False, message=''):
     if print_obj:
         pprint.pprint(object)
-    print '{0:.2f} MB\n'.format(get_obj_size_in_mb(object))
+    print '{}{:.2f} MB\n'.format(message, get_obj_size_in_mb(object))
 
 
 def timeit(f):
@@ -44,3 +44,14 @@ def download_zip_archive_to_memory(zip_file_url):
     zip_file_bytes = urllib2.urlopen(zip_file_url).read()
     buffer = cStringIO.StringIO(zip_file_bytes)
     return zipfile.ZipFile(buffer)
+
+
+@timeit
+def merge_threads_statistics(list_of_dicts):
+    merged_statistics = {}
+    get = merged_statistics.get
+    for stat in list_of_dicts:
+        for k, v in stat.iteritems():
+            merged_statistics[k] = get(k, 0.0) + v
+    print_obj_size(merged_statistics, message='Merged statistics dict size: ')
+    return merged_statistics
