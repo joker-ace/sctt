@@ -1,26 +1,14 @@
 import csv
-import threading
+import sys
+from multiprocessing import Pool
 
 import statistics
 import utils
 from classes import database
-from classes.thread_pool import ThreadPool
 from classes.url_zip_file_downloader import URLZipFileDownloader
 
-MAX_THREADS = 3
+MAX_PARALLEL_FILES = 5
 
-FILES = [
-    "https://www.dropbox.com/s/r0ctya6qn3xzr8j/d.csv.zip?dl=1",
-    "https://s3.amazonaws.com/detailed-billing-test/615271354814-aws-billing-detailed-line-items-with-resources-and-tags-2016-05.csv.zip",
-    "https://s3.amazonaws.com/detailed-billing-test/615271354814-aws-billing-detailed-line-items-with-resources-and-tags-2016-06.csv.zip",
-    "https://s3.amazonaws.com/detailed-billing-test/615271354814-aws-billing-detailed-line-items-with-resources-and-tags-2016-07.csv.zip",
-    "https://s3.amazonaws.com/detailed-billing-test/615271354814-aws-billing-detailed-line-items-with-resources-and-tags-2016-08.csv.zip",
-]
-
-db_lock = threading.Lock()
-
-
-@utils.timeit
 def process_zip_file_by_url(zip_file_url):
     downloader = URLZipFileDownloader(zip_file_url)
     archived_file_object = utils.get_archived_file_object_from_zip_archive(downloader.get_zip_archive())
@@ -30,20 +18,20 @@ def process_zip_file_by_url(zip_file_url):
     return stats
 
 
+@utils.timeit
 def main():
-    pool = ThreadPool(MAX_THREADS)
+    pool = Pool(processes=MAX_PARALLEL_FILES)
+    files = sys.stdin.read().split()
+    processes_list = [pool.apply_async(process_zip_file_by_url, (f,)) for f in files]
 
-    for url in FILES[:]:
-        pool.add_task(process_zip_file_by_url, url)
+    stats_list = [p.get() for p in processes_list]
 
-    pool.wait_completion()
-    stats_list = pool.results
-
-    stats = utils.merge_threads_statistics(stats_list)
+    stats = utils.merge_statistics(stats_list)
 
     db = database.Database()
     db.save_statistics(stats)
     del db
+
 
 if __name__ == '__main__':
     main()

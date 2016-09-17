@@ -1,7 +1,6 @@
 import sys
 import time
 import threading
-import pprint
 
 from constants import MB
 
@@ -9,14 +8,13 @@ import urllib2
 import zipfile
 import cStringIO
 
+
 def get_obj_size_in_mb(object):
     return sys.getsizeof(object) / MB
 
 
 def print_obj_size(object, print_obj=False, message=''):
-    if print_obj:
-        pprint.pprint(object)
-    print '{}{:.2f} MB\n'.format(message, get_obj_size_in_mb(object))
+    print '{} {}{:.2f} MB'.format(threading.current_thread().getName(), message, get_obj_size_in_mb(object))
 
 
 def timeit(f):
@@ -24,10 +22,16 @@ def timeit(f):
         start_time = time.time()
         result = f(*args, **kwargs)
         end_time = time.time()
-        print '{} {}: {:.3f} sec.'.format(
-            threading.current_thread().getName(), f.__name__, (end_time - start_time))
         if f.__name__ == '__download':
-            print args[0].zip_file_url[-15:]
+            template = '{} {}({}): {:.3f} sec.'
+            template_args = (
+                threading.current_thread().getName(), f.__name__, args[0].zip_file_url[-15:], (end_time - start_time))
+        else:
+            template = '{} {}: {:.3f} sec.'
+            template_args = (threading.current_thread().getName(), f.__name__, (end_time - start_time))
+
+        print template.format(*template_args)
+
         return result
 
     return inner
@@ -40,6 +44,7 @@ def get_archived_file_object_from_zip_archive(zip_archive):
         return zip_archive.open(csv_file_name)
     raise Exception('Exception: zip archive contain no files!')
 
+
 def download_zip_archive_to_memory(zip_file_url):
     zip_file_bytes = urllib2.urlopen(zip_file_url).read()
     buffer = cStringIO.StringIO(zip_file_bytes)
@@ -47,7 +52,7 @@ def download_zip_archive_to_memory(zip_file_url):
 
 
 @timeit
-def merge_threads_statistics(list_of_dicts):
+def merge_statistics(list_of_dicts):
     merged_statistics = {}
     get = merged_statistics.get
     for stat in list_of_dicts:
