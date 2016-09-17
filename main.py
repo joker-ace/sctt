@@ -14,7 +14,7 @@ def process_zip_file_by_url(zip_file_url):
     archived_file_object = utils.get_archived_file_object_from_zip_archive(downloader.get_zip_archive())
     csv_reader = csv.reader(archived_file_object)
     stats = statistics.calculate_statistics(csv_reader)
-    utils.print_obj_size(stats, message='Thread statistics dict size: ')
+    utils.print_obj_size(stats, message='Calculated statistics dict size: ')
     return stats
 
 

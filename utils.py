@@ -1,6 +1,6 @@
 import sys
 import time
-import threading
+import os
 
 from constants import MB
 
@@ -14,7 +14,7 @@ def get_obj_size_in_mb(object):
 
 
 def print_obj_size(object, print_obj=False, message=''):
-    print '{} {}{:.2f} MB'.format(threading.current_thread().getName(), message, get_obj_size_in_mb(object))
+    print '{} {}{:.2f} MB'.format(os.getpid(), message, get_obj_size_in_mb(object))
 
 
 def timeit(f):
@@ -24,11 +24,10 @@ def timeit(f):
         end_time = time.time()
         if f.__name__ == '__download':
             template = '{} {}({}): {:.3f} sec.'
-            template_args = (
-                threading.current_thread().getName(), f.__name__, args[0].zip_file_url[-15:], (end_time - start_time))
+            template_args = (os.getegid(), f.__name__, args[0].zip_file_url[-15:], (end_time - start_time))
         else:
             template = '{} {}: {:.3f} sec.'
-            template_args = (threading.current_thread().getName(), f.__name__, (end_time - start_time))
+            template_args = (os.getegid(), f.__name__, (end_time - start_time))
 
         print template.format(*template_args)
 
