@@ -7,7 +7,7 @@ from classes import database
 from classes.thread_pool import ThreadPool
 from classes.url_zip_file_downloader import URLZipFileDownloader
 
-MAX_THREADS = 3
+MAX_THREADS = 5
 
 FILES = [
     "https://www.dropbox.com/s/r0ctya6qn3xzr8j/d.csv.zip?dl=1",
